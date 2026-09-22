@@ -1,18 +1,33 @@
 package com.example.gestor.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.gestor.model.Proyecto;
+
 
 @RestController
 @RequestMapping("/proyectos")
 public class ProyectoController {
 
+    private final List<Proyecto> proyectos = new ArrayList<>();
+
+    @GetMapping()
+    public List<Proyecto> lista() {
+        return proyectos;
+    }
+    
     // GET /proyectos
     // GET /proyectos?estado=activo
-    @GetMapping()
+    @GetMapping("/estado")
     public String lista(
         @RequestParam(name = "estado", defaultValue = "todos") String estado) {
 			
@@ -26,9 +41,13 @@ public class ProyectoController {
 
     // GET /proyectos/{id}
     @GetMapping("/{id}")
-    public String detalle(
-        @PathVariable(name = "id") int id) {
-        return "Ficha del proyecto " + id;
+    public Proyecto detalle(@PathVariable(name = "id") int id) {
+        for (Proyecto p : proyectos) {
+            if (p.getId() == id) {
+                return p;
+            }
+        }
+        return null;
     }
 
     // GET /proyectos/{id}/incidencias
@@ -47,12 +66,17 @@ public class ProyectoController {
     }
     
     //GET /proyectos/incidencias?prioridad=alta&pagina=2
-    @GetMapping("/incidencias")
+    @GetMapping("/buscar-incidencias")
     public String buscarIncidencias(
         @RequestParam(name = "prioridad") String prioridad,
         @RequestParam(name = "pagina") int pagina) {
         return "Incidencias con prioridad " + prioridad + " en la página " + pagina;
     }
     
-
+    @PostMapping()
+    public Proyecto crear(@RequestBody Proyecto proyecto) {
+        proyectos.add(proyecto);
+        return proyecto;
+    }
+    
 }
