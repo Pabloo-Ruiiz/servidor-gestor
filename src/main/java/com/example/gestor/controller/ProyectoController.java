@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +68,14 @@ public class ProyectoController {
         return "Incidencias del proyecto " + id;
     }
 
+    @GetMapping("/{id}/diagnostico")
+    public String diagnostico(
+            @PathVariable(name = "id") int id,
+            @RequestParam(name = "estado", required = false) String estado,
+            @RequestHeader(name = "User-Agent") String cliente) {
+        return "Proyecto " + id + ", estado " + estado + ", cliente " + cliente;
+    }
+
     // GET /proyectos/{id}/incidencias/{idIncidencia}
     @GetMapping("/{id}/incidencias/{idIncidencia}")
     public String consultar(
@@ -83,12 +92,17 @@ public class ProyectoController {
         return proyecto;
     }
 
+    @PostMapping(value = "/espejo", consumes = "application/json", produces = "application/json")
+    public Proyecto espejo(@RequestBody Proyecto proyecto) {
+        return proyecto;
+    }
+
     @PutMapping("/{id}")
     public Proyecto actualizar(@PathVariable(name = "id") int id, @RequestBody Proyecto datos) {
         for (int i = 0; i < proyectos.size(); i++) {
             if (proyectos.get(i).getId() == id) {
                 datos.setId(id);
-                proyectos.set(id, datos);
+                proyectos.set(i, datos);
                 return datos;
             }
         }

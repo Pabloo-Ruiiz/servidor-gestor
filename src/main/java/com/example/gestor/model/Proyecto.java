@@ -1,5 +1,8 @@
 package com.example.gestor.model;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class Proyecto {
@@ -9,6 +12,8 @@ public class Proyecto {
     private String descripcion;
     private boolean activo;
     private int numeroIncidencias;
+    private List<String> etiquetas;
+    private LocalDate fechaInicio;
 
     @JsonCreator
     public Proyecto() {
@@ -51,6 +56,22 @@ public class Proyecto {
     }
     public void setNumeroIncidencias(int numeroIncidencias) {
         this.numeroIncidencias = numeroIncidencias;
+    }
+
+    public List<String> getEtiquetas() {
+        return etiquetas;
+    }
+
+    public void setEtiquetas(List<String> etiquetas) {
+        this.etiquetas = etiquetas;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
     }
 
 }
