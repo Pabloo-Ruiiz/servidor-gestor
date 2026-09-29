@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,9 +23,10 @@ public class TareaController {
     private final List<Tarea> tareas = new ArrayList<>();
     private int siguienteId = 1;
 
-    @GetMapping
+    @GetMapping(produces = "application/json")
     public List<Tarea> lista(
             @RequestParam(name = "completada", required = false) Boolean completada) {
+
         if (completada == null) {
             return tareas;
         }
@@ -47,11 +49,27 @@ public class TareaController {
         return null;
     }
 
-    @PostMapping
+    @GetMapping("/diagnostico")
+    public String diagnostico(
+            @RequestHeader(name = "User-Agent") String cliente,
+            @RequestHeader(name = "Accept") String acepta) {
+
+        return "Me llama: " + cliente + "\nQuiere recibir: " + acepta;
+    }
+
+    @PostMapping(consumes = "application/json", produces = "application/json")
     public Tarea crear(@RequestBody Tarea tarea) {
         tarea.setId(siguienteId);
         siguienteId = siguienteId + 1;
         tareas.add(tarea);
+        return tarea;
+    }
+
+    @PostMapping("/espejo")
+    public Tarea espejo(@RequestBody Tarea tarea) {
+        System.out.println("He recibido: " + tarea.getTitulo()
+                + " / " + tarea.getPrioridad()
+                + " / completada=" + tarea.isCompletada());
         return tarea;
     }
 
