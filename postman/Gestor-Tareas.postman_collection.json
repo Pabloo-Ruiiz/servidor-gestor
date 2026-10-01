@@ -1,0 +1,164 @@
+{
+  "info": {
+    "name": "Gestor - tareas Paso 4",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "tareaId", "value": "" },
+    { "key": "tareaBId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Crear tarea A",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Prueba A de la colección\",\n  \"prioridad\": \"alta\",\n  \"completada\": false\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/tareas" }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.collectionVariables.unset(\"tareaId\");",
+            "if (pm.response.code === 201) {",
+            "    pm.collectionVariables.set(\"tareaId\", pm.response.json().id);",
+            "}",
+            "pm.test(\"Creación con 201\", function () { pm.response.to.have.status(201); });",
+            "pm.test(\"Id asignado y contenido esperado\", function () {",
+            "    const cuerpo = pm.response.json();",
+            "    pm.expect(cuerpo.id).to.be.above(0);",
+            "    pm.expect(cuerpo.titulo).to.equal(\"Prueba A de la colección\");",
+            "});",
+            "pm.test(\"Incluye Location\", function () {",
+            "    pm.expect(pm.response.headers.get(\"Location\")).to.be.a(\"string\").and.not.empty;",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Consultar tarea A",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/tareas/{{tareaId}}" } },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test(\"Consulta A con 200 e identidad correcta\", function () {",
+            "    pm.response.to.have.status(200);",
+            "    const cuerpo = pm.response.json();",
+            "    pm.expect(cuerpo.id).to.equal(Number(pm.collectionVariables.get(\"tareaId\")));",
+            "    pm.expect(cuerpo.titulo).to.equal(\"Prueba A de la colección\");",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Crear tarea B",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"titulo\": \"Prueba B de la colección\",\n  \"prioridad\": \"alta\",\n  \"completada\": false\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/tareas" }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.collectionVariables.unset(\"tareaBId\");",
+            "if (pm.response.code === 201) {",
+            "    pm.collectionVariables.set(\"tareaBId\", pm.response.json().id);",
+            "}",
+            "pm.test(\"Creación con 201\", function () { pm.response.to.have.status(201); });",
+            "pm.test(\"Id asignado y contenido esperado\", function () {",
+            "    const cuerpo = pm.response.json();",
+            "    pm.expect(cuerpo.id).to.be.above(0);",
+            "    pm.expect(cuerpo.titulo).to.equal(\"Prueba B de la colección\");",
+            "});",
+            "pm.test(\"Incluye Location\", function () {",
+            "    pm.expect(pm.response.headers.get(\"Location\")).to.be.a(\"string\").and.not.empty;",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Consultar tarea B",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/tareas/{{tareaBId}}" } },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test(\"Consulta con 200\", function () { pm.response.to.have.status(200); });",
+            "pm.test(\"Devuelve exactamente B\", function () {",
+            "    const cuerpo = pm.response.json();",
+            "    pm.expect(cuerpo.id).to.equal(Number(pm.collectionVariables.get(\"tareaBId\")));",
+            "    pm.expect(cuerpo.titulo).to.equal(\"Prueba B de la colección\");",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Listar tareas",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/tareas" } },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test(\"Listado con 200\", function () { pm.response.to.have.status(200); });",
+            "pm.test(\"El listado es un array\", function () {",
+            "    pm.expect(pm.response.json()).to.be.an(\"array\");",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Borrar tarea B",
+      "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/tareas/{{tareaBId}}" } },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test(\"Borrado con 204 y sin cuerpo\", function () {",
+            "    pm.response.to.have.status(204);",
+            "    pm.expect(pm.response.text()).to.equal(\"\");",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Comprobar B borrada",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/tareas/{{tareaBId}}" } },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test(\"B devuelve 404 después del borrado\", function () {",
+            "    pm.response.to.have.status(404);",
+            "});"
+          ]
+        }
+      }]
+    }
+  ]
+}
