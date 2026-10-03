@@ -18,14 +18,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Tarea;
 
 @RestController
 @RequestMapping("/tareas")
 public class TareaController {
 
-    private final List<Tarea> tareas = new ArrayList<>();
     private int siguienteId = 1;
+    private final List<Tarea> tareas;
+
+    public TareaController(MemoriaProyecto memoria) {
+        this.tareas = memoria.getTareas();
+    }
 
     @GetMapping(produces = "application/json")
     public List<Tarea> lista(
