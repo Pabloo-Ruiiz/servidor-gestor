@@ -9,6 +9,7 @@ public class Proyecto {
     private String descripcion;
     private boolean activo;
     private int numeroIncidencias;
+    private String notaInterna = "solo para uso interno";
 
     @JsonCreator
     public Proyecto() {
@@ -51,6 +52,14 @@ public class Proyecto {
     }
     public void setNumeroIncidencias(int numeroIncidencias) {
         this.numeroIncidencias = numeroIncidencias;
+    }
+
+    public String getNotaInterna() {
+        return notaInterna;
+    }
+
+    public void setNotaInterna(String notaInterna) {
+        this.notaInterna = notaInterna;
     }
 
 }
