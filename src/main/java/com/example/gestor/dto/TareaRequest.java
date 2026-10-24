@@ -1,23 +1,24 @@
 package com.example.gestor.dto;
 
+import com.example.gestor.validacion.PrioridadValida;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public class TareaRequest {
 
-    @NotBlank
-    @Size(min = 3, max = 120)
+    @NotBlank(message = "El título es obligatorio")
+    @Size(min = 3, max = 120, message = "El título debe tener entre 3 y 120 caracteres")
     private String titulo;
 
-    @NotNull
-    @Pattern(regexp = "baja|media|alta")
+    @NotNull(message = "La prioridad debe ser baja, media o alta")
+    @PrioridadValida 
     private String prioridad;
 
-    @NotNull
-    @Positive
+    @NotNull(message = "El identificador del proyecto es obligatorio")
+    @Positive(message = "El identificador de proyecto debe ser un número positivo")
     private Integer proyectoId;
 
     public TareaRequest() {
