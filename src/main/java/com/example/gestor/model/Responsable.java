@@ -11,6 +11,11 @@ public class Responsable {
     public Responsable() {
     }
 
+    public Responsable(String nombre, String email) {
+        this.nombre = nombre;
+        this.email = email;
+    }
+
     public String getNombre() {
         return nombre;
     }

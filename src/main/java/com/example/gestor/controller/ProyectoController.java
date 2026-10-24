@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.gestor.memoria.MemoriaProyecto;
+import com.example.gestor.dto.ProyectoResponse;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
+import com.example.gestor.dto.TareaResponse;
 
 @RestController
 @RequestMapping("/proyectos")
@@ -35,15 +37,18 @@ public class ProyectoController {
     }
 
     @GetMapping()
-    public List<Proyecto> lista(
+    public List<ProyectoResponse> lista(
             @RequestParam(name = "activo", required = false) Boolean activo) {
+        List<ProyectoResponse> resultado = new ArrayList<>();
         if (activo == null) {
-            return proyectos;
+            for (Proyecto proyecto : proyectos) {
+                resultado.add(ProyectoResponse.desde(proyecto));
+            }
+            return resultado;
         }
-        List<Proyecto> resultado = new ArrayList<>();
         for (Proyecto proyecto : proyectos) {
             if (proyecto.isActivo() == activo) {
-                resultado.add(proyecto);
+                resultado.add(ProyectoResponse.desde(proyecto));
             }
         }
         return resultado;
@@ -62,7 +67,7 @@ public class ProyectoController {
     }
 
     @GetMapping("/{id}/tareas")
-    public ResponseEntity<List<Tarea>> tareasDelProyecto(
+    public ResponseEntity<List<TareaResponse>> tareasDelProyecto(
             @PathVariable(name = "id") int id) {
         boolean existe = false;
         for (Proyecto proyecto : proyectos) {
@@ -75,10 +80,10 @@ public class ProyectoController {
             return ResponseEntity.notFound().build();
         }
 
-        List<Tarea> resultado = new ArrayList<>();
+        List<TareaResponse> resultado = new ArrayList<>();
         for (Tarea tarea : tareas) {
             if (tarea.getProyectoId() == id) {
-                resultado.add(tarea);
+                resultado.add(TareaResponse.desde(tarea));
             }
         }
         return ResponseEntity.ok(resultado);
@@ -86,10 +91,10 @@ public class ProyectoController {
 
     // GET /proyectos/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Proyecto> detalle(@PathVariable(name = "id") int id) {
+    public ResponseEntity<ProyectoResponse> detalle(@PathVariable(name = "id") int id) {
         for (Proyecto p : proyectos) {
             if (p.getId() == id) {
-                return ResponseEntity.ok(p);
+                return ResponseEntity.ok(ProyectoResponse.desde(p));
             }
         }
         return ResponseEntity.notFound().build();
@@ -119,7 +124,7 @@ public class ProyectoController {
     }
 
     @PostMapping()
-    public ResponseEntity<Proyecto> crear(@RequestBody Proyecto proyecto) {
+    public ResponseEntity<ProyectoResponse> crear(@RequestBody Proyecto proyecto) {
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
         proyectos.add(proyecto);
@@ -129,23 +134,18 @@ public class ProyectoController {
                 .path("/{id}")
                 .buildAndExpand(proyecto.getId())
                 .toUri();
-        return ResponseEntity.created(ubicacion).body(proyecto);
-    }
-
-    @PostMapping(value = "/espejo", consumes = "application/json", produces = "application/json")
-    public Proyecto espejo(@RequestBody Proyecto proyecto) {
-        return proyecto;
+        return ResponseEntity.created(ubicacion).body(ProyectoResponse.desde(proyecto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Proyecto> actualizar(
+    public ResponseEntity<ProyectoResponse> actualizar(
             @PathVariable(name = "id") int id,
             @RequestBody Proyecto datos) {
         for (int i = 0; i < proyectos.size(); i++) {
             if (proyectos.get(i).getId() == id) {
                 datos.setId(id);
                 proyectos.set(i, datos);
-                return ResponseEntity.ok(datos);
+                return ResponseEntity.ok(ProyectoResponse.desde(datos));
             }
         }
 
