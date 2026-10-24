@@ -18,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.gestor.dto.TareaPatchRequest;
+import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
+import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
@@ -39,22 +42,22 @@ public class TareaController {
     @GetMapping("/tareas")
     public List<TareaResponse> lista(
             @RequestParam(name = "completada", required = false) Boolean completada) {
-        List<TareaResponse> respuesta = new ArrayList<>();
+        List<Tarea> seleccion = new ArrayList<>();
         for (Tarea tarea : tareas) {
             if (completada == null || tarea.isCompletada() == completada) {
-                respuesta.add(TareaResponse.desde(tarea));
+                seleccion.add(tarea);
             }
         }
-        return respuesta;
+        return TareaMapper.aRespuestas(seleccion);
     }
 
     @GetMapping("/tareas/{id}")
-    public ResponseEntity<TareaResponse> detalle(@PathVariable int id) {
-        Tarea tarea = buscarPorId(id);
+    public ResponseEntity<TareaResponse> detalle(@PathVariable(name = "id") int id) {
+        Tarea tarea = buscar(id);
         if (tarea == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(TareaResponse.desde(tarea));
+        return ResponseEntity.ok(TareaMapper.aRespuesta(tarea));
     }
 
     @GetMapping("/tareas/diagnostico")
@@ -63,6 +66,20 @@ public class TareaController {
             @RequestHeader(name = "Accept") String acepta) {
 
         return "Me llama: " + cliente + "\nQuiere recibir: " + acepta;
+    }
+
+    @PostMapping(value = "/tareas", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<TareaResponse> crear(@RequestBody TareaRequest peticion) {
+        Tarea tarea = TareaMapper.aModelo(peticion);
+        tarea.setId(siguienteId);
+        siguienteId = siguienteId + 1;
+        tareas.add(tarea);
+
+        URI ubicacion = ServletUriComponentsBuilder
+                .fromCurrentRequest().path("/{id}")
+                .buildAndExpand(tarea.getId()).toUri();
+
+        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(tarea));
     }
 
     @PostMapping(value = "/proyectos/{proyectoId}/tareas", consumes = "application/json", produces = "application/json")
@@ -94,28 +111,20 @@ public class TareaController {
         return ResponseEntity.created(ubicacion).body(TareaResponse.desde(nueva));
     }
 
-    @PostMapping(value = "/tareas", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<TareaResponse> crear(@RequestBody Tarea tarea) {
-        tarea.setId(siguienteId);
-        siguienteId = siguienteId + 1;
-        tareas.add(tarea);
-
-        URI ubicacion = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(tarea.getId())
-                .toUri();
-        return ResponseEntity.created(ubicacion).body(TareaResponse.desde(tarea));
-    }
-
     @PutMapping("/tareas/{id}")
     public ResponseEntity<TareaResponse> actualizar(
             @PathVariable(name = "id") int id,
-            @RequestBody Tarea datos) {
+            @RequestBody TareaRequest peticion) {
 
         for (int i = 0; i < tareas.size(); i++) {
             if (tareas.get(i).getId() == id) {
+                Tarea datos = new Tarea();
                 datos.setId(id);
+                datos.setTitulo(peticion.getTitulo());
+                datos.setPrioridad(peticion.getPrioridad());
+                if (peticion.getProyectoId() != null) {
+                    datos.setProyectoId(peticion.getProyectoId());
+                }
                 tareas.set(i, datos);
                 return ResponseEntity.ok(TareaResponse.desde(datos));
             }
@@ -132,7 +141,7 @@ public class TareaController {
     @PatchMapping("/tareas/{id}")
     public ResponseEntity<TareaResponse> modificar(
             @PathVariable(name = "id") int id,
-            @RequestBody Tarea cambios) {
+            @RequestBody TareaPatchRequest cambios) {
 
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
@@ -142,13 +151,16 @@ public class TareaController {
                 if (cambios.getPrioridad() != null) {
                     tarea.setPrioridad(cambios.getPrioridad());
                 }
+                if (cambios.getCompletada() != null) {
+                    tarea.setCompletada(cambios.getCompletada());
+                }
                 return ResponseEntity.ok(TareaResponse.desde(tarea));
             }
         }
         return ResponseEntity.notFound().build();
     }
 
-    private Tarea buscarPorId(int id) {
+    private Tarea buscar(int id) {
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
                 return tarea;

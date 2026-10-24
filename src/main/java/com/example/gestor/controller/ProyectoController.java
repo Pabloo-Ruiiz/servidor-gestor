@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -19,9 +20,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.dto.ProyectoResponse;
+import com.example.gestor.dto.ProyectoRequest;
+import com.example.gestor.dto.ProyectoPatchRequest;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
 import com.example.gestor.dto.TareaResponse;
+import com.example.gestor.mapper.ProyectoMapper;
+import com.example.gestor.mapper.TareaMapper;
 
 @RestController
 @RequestMapping("/proyectos")
@@ -39,19 +44,17 @@ public class ProyectoController {
     @GetMapping()
     public List<ProyectoResponse> lista(
             @RequestParam(name = "activo", required = false) Boolean activo) {
-        List<ProyectoResponse> resultado = new ArrayList<>();
+        List<Proyecto> resultado = new ArrayList<>();
         if (activo == null) {
+            resultado.addAll(proyectos);
+        } else {
             for (Proyecto proyecto : proyectos) {
-                resultado.add(ProyectoResponse.desde(proyecto));
-            }
-            return resultado;
-        }
-        for (Proyecto proyecto : proyectos) {
-            if (proyecto.isActivo() == activo) {
-                resultado.add(ProyectoResponse.desde(proyecto));
+                if (proyecto.isActivo() == activo) {
+                    resultado.add(proyecto);
+                }
             }
         }
-        return resultado;
+        return ProyectoMapper.aRespuestas(resultado);
     }
 
     @GetMapping("/estado")
@@ -69,40 +72,32 @@ public class ProyectoController {
     @GetMapping("/{id}/tareas")
     public ResponseEntity<List<TareaResponse>> tareasDelProyecto(
             @PathVariable(name = "id") int id) {
-        boolean existe = false;
-        for (Proyecto proyecto : proyectos) {
-            if (proyecto.getId() == id) {
-                existe = true;
-                break;
-            }
-        }
-        if (!existe) {
+        if (buscar(id) == null) {
             return ResponseEntity.notFound().build();
         }
 
-        List<TareaResponse> resultado = new ArrayList<>();
+        List<Tarea> resultado = new ArrayList<>();
         for (Tarea tarea : tareas) {
             if (tarea.getProyectoId() == id) {
-                resultado.add(TareaResponse.desde(tarea));
+                resultado.add(tarea);
             }
         }
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(TareaMapper.aRespuestas(resultado));
     }
 
     // GET /proyectos/{id}
     @GetMapping("/{id}")
     public ResponseEntity<ProyectoResponse> detalle(@PathVariable(name = "id") int id) {
-        for (Proyecto p : proyectos) {
-            if (p.getId() == id) {
-                return ResponseEntity.ok(ProyectoResponse.desde(p));
-            }
+        Proyecto proyecto = buscar(id);
+        if (proyecto != null) {
+            return ResponseEntity.ok(ProyectoMapper.aRespuesta(proyecto));
         }
         return ResponseEntity.notFound().build();
     }
 
     // GET /proyectos/{id}/incidencias
     @GetMapping("/{id}/incidencias")
-    public String buscar(
+    public String buscarIncidencias(
             @PathVariable(name = "id") int id) {
         return "Incidencias del proyecto " + id;
     }
@@ -124,7 +119,8 @@ public class ProyectoController {
     }
 
     @PostMapping()
-    public ResponseEntity<ProyectoResponse> crear(@RequestBody Proyecto proyecto) {
+    public ResponseEntity<ProyectoResponse> crear(@RequestBody ProyectoRequest peticion) {
+        Proyecto proyecto = ProyectoMapper.aModelo(peticion);
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
         proyectos.add(proyecto);
@@ -134,21 +130,33 @@ public class ProyectoController {
                 .path("/{id}")
                 .buildAndExpand(proyecto.getId())
                 .toUri();
-        return ResponseEntity.created(ubicacion).body(ProyectoResponse.desde(proyecto));
+        return ResponseEntity.created(ubicacion).body(ProyectoMapper.aRespuesta(proyecto));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProyectoResponse> actualizar(
             @PathVariable(name = "id") int id,
-            @RequestBody Proyecto datos) {
-        for (int i = 0; i < proyectos.size(); i++) {
-            if (proyectos.get(i).getId() == id) {
-                datos.setId(id);
-                proyectos.set(i, datos);
-                return ResponseEntity.ok(ProyectoResponse.desde(datos));
-            }
+            @RequestBody ProyectoRequest peticion) {
+        Proyecto existente = buscar(id);
+        if (existente != null) {
+            Proyecto datos = ProyectoMapper.aModelo(peticion);
+            datos.setId(id);
+            proyectos.set(proyectos.indexOf(existente), datos);
+            return ResponseEntity.ok(ProyectoMapper.aRespuesta(datos));
         }
 
+        return ResponseEntity.notFound().build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProyectoResponse> modificar(
+            @PathVariable(name = "id") int id,
+            @RequestBody ProyectoPatchRequest cambios) {
+        Proyecto proyecto = buscar(id);
+        if (proyecto != null) {
+            ProyectoMapper.aplicar(cambios, proyecto);
+            return ResponseEntity.ok(ProyectoMapper.aRespuesta(proyecto));
+        }
         return ResponseEntity.notFound().build();
     }
 
@@ -156,5 +164,14 @@ public class ProyectoController {
     public ResponseEntity<Void> eliminar(@PathVariable(name = "id") int id) {
         proyectos.removeIf(proyecto -> proyecto.getId() == id);
         return ResponseEntity.noContent().build();
+    }
+
+    private Proyecto buscar(int id) {
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.getId() == id) {
+                return proyecto;
+            }
+        }
+        return null;
     }
 }
