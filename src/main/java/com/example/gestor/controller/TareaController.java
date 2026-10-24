@@ -21,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
+import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
@@ -54,12 +55,12 @@ public class TareaController {
     }
 
     @GetMapping("/tareas/{id}")
-    public ResponseEntity<TareaResponse> detalle(@PathVariable(name = "id") int id) {
+    public TareaResponse detalle(@PathVariable(name = "id") int id) {
         Tarea tarea = buscar(id);
         if (tarea == null) {
-            return ResponseEntity.notFound().build();
+            throw new RecursoNoEncontradoException("tarea", id);
         }
-        return ResponseEntity.ok(TareaMapper.aRespuesta(tarea));
+        return TareaMapper.aRespuesta(tarea);
     }
 
     @GetMapping("/tareas/diagnostico")
@@ -86,8 +87,7 @@ public class TareaController {
 
     @PostMapping(value = "/proyectos/{proyectoId}/tareas", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TareaResponse> crearEnProyecto(
-            @Valid
-            @PathVariable(name = "proyectoId") int proyectoId,
+            @Valid @PathVariable(name = "proyectoId") int proyectoId,
             @RequestBody Tarea nueva) {
 
         // 1. Validar existencia del recurso padre antes de cualquier efecto colateral
@@ -99,7 +99,7 @@ public class TareaController {
             }
         }
         if (!existe) {
-            return ResponseEntity.notFound().build();
+            throw new RecursoNoEncontradoException("proyecto", proyectoId);
         }
 
         // 2. El servidor controla la identidad y la pertenencia
@@ -115,7 +115,7 @@ public class TareaController {
     }
 
     @PutMapping("/tareas/{id}")
-    public ResponseEntity<TareaResponse> actualizar(
+    public TareaResponse actualizar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaRequest peticion) {
 
@@ -129,10 +129,10 @@ public class TareaController {
                     datos.setProyectoId(peticion.getProyectoId());
                 }
                 tareas.set(i, datos);
-                return ResponseEntity.ok(TareaResponse.desde(datos));
+                return TareaResponse.desde(datos);
             }
         }
-        return ResponseEntity.notFound().build();
+        throw new RecursoNoEncontradoException("tarea", id);
     }
 
     @DeleteMapping("/tareas/{id}")
@@ -142,7 +142,7 @@ public class TareaController {
     }
 
     @PatchMapping("/tareas/{id}")
-    public ResponseEntity<TareaResponse> modificar(
+    public TareaResponse modificar(
             @PathVariable(name = "id") int id,
             @RequestBody TareaPatchRequest cambios) {
 
@@ -157,10 +157,10 @@ public class TareaController {
                 if (cambios.getCompletada() != null) {
                     tarea.setCompletada(cambios.getCompletada());
                 }
-                return ResponseEntity.ok(TareaResponse.desde(tarea));
+                return TareaResponse.desde(tarea);
             }
         }
-        return ResponseEntity.notFound().build();
+        throw new RecursoNoEncontradoException("tarea", id);
     }
 
     private Tarea buscar(int id) {

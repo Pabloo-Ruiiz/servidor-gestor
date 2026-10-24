@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.model.Incidencia;
 
 @RestController 
@@ -30,7 +31,7 @@ public class IncidenciaController {
                 return incidencia;
             }
         }
-        return null;
+        throw new RecursoNoEncontradoException("incidencia", id);
     }
     
     @PostMapping()
