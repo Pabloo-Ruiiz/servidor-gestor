@@ -19,20 +19,23 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.gestor.memoria.MemoriaProyecto;
+import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
 
 @RestController
-@RequestMapping("/tareas")
+@RequestMapping()
 public class TareaController {
 
     private int siguienteId = 1;
     private final List<Tarea> tareas;
+    private final List<Proyecto> proyectos;
 
     public TareaController(MemoriaProyecto memoria) {
         this.tareas = memoria.getTareas();
+        this.proyectos = memoria.getProyectos();
     }
 
-    @GetMapping(produces = "application/json")
+    @GetMapping(value = "/tareas", produces = "application/json")
     public List<Tarea> lista(
             @RequestParam(name = "completada", required = false) Boolean completada) {
 
@@ -48,7 +51,7 @@ public class TareaController {
         return resultado;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/tareas/{id}")
     public ResponseEntity<Tarea> detalle(@PathVariable(name = "id") int id) {
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
@@ -58,7 +61,7 @@ public class TareaController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/diagnostico")
+    @GetMapping("/tareas/diagnostico")
     public String diagnostico(
             @RequestHeader(name = "User-Agent") String cliente,
             @RequestHeader(name = "Accept") String acepta) {
@@ -66,7 +69,36 @@ public class TareaController {
         return "Me llama: " + cliente + "\nQuiere recibir: " + acepta;
     }
 
-    @PostMapping(consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "/proyectos/{proyectoId}/tareas", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<Tarea> crearEnProyecto(
+            @PathVariable(name = "proyectoId") int proyectoId,
+            @RequestBody Tarea nueva) {
+
+        // 1. Validar existencia del recurso padre antes de cualquier efecto colateral
+        boolean existe = false;
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.getId() == proyectoId) {
+                existe = true;
+                break;
+            }
+        }
+        if (!existe) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 2. El servidor controla la identidad y la pertenencia
+        nueva.setId(siguienteId++);
+        nueva.setProyectoId(proyectoId);
+        tareas.add(nueva);
+
+        // 3. Dirección permanente del recurso recién creado
+        URI ubicacion = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/tareas/{id}").buildAndExpand(nueva.getId()).toUri();
+
+        return ResponseEntity.created(ubicacion).body(nueva);
+    }
+
+    @PostMapping(value = "/tareas", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Tarea> crear(@RequestBody Tarea tarea) {
         tarea.setId(siguienteId);
         siguienteId = siguienteId + 1;
@@ -80,7 +112,7 @@ public class TareaController {
         return ResponseEntity.created(ubicacion).body(tarea);
     }
 
-    @PostMapping("/espejo")
+    @PostMapping("/tareas/espejo")
     public Tarea espejo(@RequestBody Tarea tarea) {
         System.out.println("He recibido: " + tarea.getTitulo()
                 + " / " + tarea.getPrioridad()
@@ -88,7 +120,7 @@ public class TareaController {
         return tarea;
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/tareas/{id}")
     public ResponseEntity<Tarea> actualizar(
             @PathVariable(name = "id") int id,
             @RequestBody Tarea datos) {
@@ -103,13 +135,13 @@ public class TareaController {
         return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/tareas/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable(name = "id") int id) {
         tareas.removeIf(tarea -> tarea.getId() == id);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/tareas/{id}")
     public ResponseEntity<Tarea> modificar(
             @PathVariable(name = "id") int id,
             @RequestBody Tarea cambios) {
