@@ -26,6 +26,8 @@ import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping()
 public class TareaController {
@@ -69,7 +71,7 @@ public class TareaController {
     }
 
     @PostMapping(value = "/tareas", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<TareaResponse> crear(@RequestBody TareaRequest peticion) {
+    public ResponseEntity<TareaResponse> crear(@Valid @RequestBody TareaRequest peticion) {
         Tarea tarea = TareaMapper.aModelo(peticion);
         tarea.setId(siguienteId);
         siguienteId = siguienteId + 1;
@@ -84,6 +86,7 @@ public class TareaController {
 
     @PostMapping(value = "/proyectos/{proyectoId}/tareas", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TareaResponse> crearEnProyecto(
+            @Valid
             @PathVariable(name = "proyectoId") int proyectoId,
             @RequestBody Tarea nueva) {
 
@@ -114,7 +117,7 @@ public class TareaController {
     @PutMapping("/tareas/{id}")
     public ResponseEntity<TareaResponse> actualizar(
             @PathVariable(name = "id") int id,
-            @RequestBody TareaRequest peticion) {
+            @Valid @RequestBody TareaRequest peticion) {
 
         for (int i = 0; i < tareas.size(); i++) {
             if (tareas.get(i).getId() == id) {

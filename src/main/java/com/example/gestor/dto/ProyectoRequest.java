@@ -1,8 +1,15 @@
 package com.example.gestor.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class ProyectoRequest {
 
+    @NotBlank
+    @Size(min = 3, max = 80)
     private String nombre;
+
+    @Size(max = 500)
     private String descripcion;
     private Boolean activo;
 

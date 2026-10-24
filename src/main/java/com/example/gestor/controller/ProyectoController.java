@@ -28,6 +28,8 @@ import com.example.gestor.dto.TareaResponse;
 import com.example.gestor.mapper.ProyectoMapper;
 import com.example.gestor.mapper.TareaMapper;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/proyectos")
 public class ProyectoController {
@@ -119,7 +121,7 @@ public class ProyectoController {
     }
 
     @PostMapping()
-    public ResponseEntity<ProyectoResponse> crear(@RequestBody ProyectoRequest peticion) {
+    public ResponseEntity<ProyectoResponse> crear(@Valid @RequestBody ProyectoRequest peticion) {
         Proyecto proyecto = ProyectoMapper.aModelo(peticion);
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
@@ -136,7 +138,7 @@ public class ProyectoController {
     @PutMapping("/{id}")
     public ResponseEntity<ProyectoResponse> actualizar(
             @PathVariable(name = "id") int id,
-            @RequestBody ProyectoRequest peticion) {
+            @Valid @RequestBody ProyectoRequest peticion) {
         Proyecto existente = buscar(id);
         if (existente != null) {
             Proyecto datos = ProyectoMapper.aModelo(peticion);
