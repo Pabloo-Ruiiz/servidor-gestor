@@ -58,7 +58,7 @@ public class ProyectoController {
         }
 
         return "Lista de proyectos con estado " + estado;
-
+        
     }
 
     @GetMapping("/{id}/tareas")
