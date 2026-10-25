@@ -7,14 +7,14 @@ import com.example.gestor.validacion.FechasCoherentes;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-@FechasCoherentes
+@FechasCoherentes(message = "La fecha de fin no puede ser anterior a la fecha de inicio")
 public class ProyectoRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 3, max = 80, message = "El nombre debe tener entre 3 y 80 caracteres")
     private String nombre;
 
-    @NotBlank(message = "La descripcion es obligatorio")
+    @NotBlank(message = "La descripción es obligatoria")
     @Size(min = 3, max = 500, message = "La descripción debe tener entre 3 y 500 caracteres")
     private String descripcion;
     private Boolean activo;

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.gestor.dto.TareaPatchRequest;
+import com.example.gestor.dto.TareaProyectoRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
 import com.example.gestor.error.RecursoNoEncontradoException;
@@ -87,8 +88,8 @@ public class TareaController {
 
     @PostMapping(value = "/proyectos/{proyectoId}/tareas", consumes = "application/json", produces = "application/json")
     public ResponseEntity<TareaResponse> crearEnProyecto(
-            @Valid @PathVariable(name = "proyectoId") int proyectoId,
-            @RequestBody Tarea nueva) {
+            @PathVariable(name = "proyectoId") int proyectoId,
+            @Valid @RequestBody TareaProyectoRequest peticion) {
 
         // 1. Validar existencia del recurso padre antes de cualquier efecto colateral
         boolean existe = false;
@@ -103,15 +104,15 @@ public class TareaController {
         }
 
         // 2. El servidor controla la identidad y la pertenencia
+        Tarea nueva = TareaMapper.aModelo(peticion, proyectoId);
         nueva.setId(siguienteId++);
-        nueva.setProyectoId(proyectoId);
         tareas.add(nueva);
 
         // 3. Dirección permanente del recurso recién creado
         URI ubicacion = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/tareas/{id}").buildAndExpand(nueva.getId()).toUri();
 
-        return ResponseEntity.created(ubicacion).body(TareaResponse.desde(nueva));
+        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(nueva));
     }
 
     @PutMapping("/tareas/{id}")
@@ -121,15 +122,10 @@ public class TareaController {
 
         for (int i = 0; i < tareas.size(); i++) {
             if (tareas.get(i).getId() == id) {
-                Tarea datos = new Tarea();
+                Tarea datos = TareaMapper.aModelo(peticion);
                 datos.setId(id);
-                datos.setTitulo(peticion.getTitulo());
-                datos.setPrioridad(peticion.getPrioridad());
-                if (peticion.getProyectoId() != null) {
-                    datos.setProyectoId(peticion.getProyectoId());
-                }
                 tareas.set(i, datos);
-                return TareaResponse.desde(datos);
+                return TareaMapper.aRespuesta(datos);
             }
         }
         throw new RecursoNoEncontradoException("tarea", id);
@@ -148,16 +144,8 @@ public class TareaController {
 
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
-                if (cambios.getTitulo() != null) {
-                    tarea.setTitulo(cambios.getTitulo());
-                }
-                if (cambios.getPrioridad() != null) {
-                    tarea.setPrioridad(cambios.getPrioridad());
-                }
-                if (cambios.getCompletada() != null) {
-                    tarea.setCompletada(cambios.getCompletada());
-                }
-                return TareaResponse.desde(tarea);
+                TareaMapper.aplicar(cambios, tarea);
+                return TareaMapper.aRespuesta(tarea);
             }
         }
         throw new RecursoNoEncontradoException("tarea", id);

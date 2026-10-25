@@ -14,7 +14,7 @@ public class TareaRequest {
     private String titulo;
 
     @NotNull(message = "La prioridad debe ser baja, media o alta")
-    @PrioridadValida 
+    @PrioridadValida(message = "La prioridad debe ser baja, media o alta")
     private String prioridad;
 
     @NotNull(message = "El identificador del proyecto es obligatorio")
