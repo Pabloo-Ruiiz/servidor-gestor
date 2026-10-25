@@ -5,8 +5,10 @@ import java.util.List;
 
 import com.example.gestor.dto.ResponsableResponse;
 import com.example.gestor.dto.TareaPatchRequest;
+import com.example.gestor.dto.TareaProyectoRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
+import com.example.gestor.model.Responsable;
 import com.example.gestor.model.Tarea;
 
 public class TareaMapper {
@@ -26,6 +28,16 @@ public class TareaMapper {
         return tarea;
     }
 
+    /** Convierte la petición anidada en el modelo asociado al proyecto de la ruta. */
+    public static Tarea aModelo(TareaProyectoRequest peticion, int proyectoId) {
+        Tarea tarea = new Tarea();
+        tarea.setTitulo(peticion.getTitulo());
+        tarea.setPrioridad(peticion.getPrioridad());
+        tarea.setProyectoId(proyectoId);
+        tarea.setCompletada(false);
+        return tarea;
+    }
+
     /** Del modelo a lo que publica la API. */
     public static TareaResponse aRespuesta(Tarea tarea) {
         return new TareaResponse(
@@ -36,7 +48,14 @@ public class TareaMapper {
                 tarea.getProyectoId(),
                 tarea.getEtiquetas(),
                 tarea.getVencimiento(),
-                ResponsableResponse.desde(tarea.getResponsable()));
+                aRespuesta(tarea.getResponsable()));
+    }
+
+    private static ResponsableResponse aRespuesta(Responsable responsable) {
+        if (responsable == null) {
+            return null;
+        }
+        return new ResponsableResponse(responsable.getNombre(), responsable.getEmail());
     }
 
     public static List<TareaResponse> aRespuestas(List<Tarea> tareas) {

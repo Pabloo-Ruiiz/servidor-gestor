@@ -5,7 +5,7 @@ import com.example.gestor.validacion.PrioridadValida;
 public class TareaPatchRequest {
 
     private String titulo;
-    @PrioridadValida 
+    @PrioridadValida(message = "La prioridad debe ser baja, media o alta")
     private String prioridad;
     private Boolean completada;
     
