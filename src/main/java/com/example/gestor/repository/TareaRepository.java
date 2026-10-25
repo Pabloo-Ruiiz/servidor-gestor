@@ -1,46 +1,19 @@
 package com.example.gestor.repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
-
 import com.example.gestor.model.Tarea;
 
-@Repository
-public class TareaRepository {
+public interface TareaRepository {
 
-    private final List<Tarea> tareas = new ArrayList<>();
-    private int siguienteId = 1;
+    List<Tarea> findAll();
 
-    public List<Tarea> findAll() {
-        return new ArrayList<>(tareas);
-    }
+    Optional<Tarea> findById(int id);
 
-    public Optional<Tarea> findById(int id) {
-        for (Tarea tarea : tareas) {
-            if (tarea.getId() == id) {
-                return Optional.of(tarea);
-            }
-        }
-        return Optional.empty();
-    }
+    Tarea save(Tarea tarea);
 
-    public Tarea save(Tarea tarea) {
-        if (tarea.getId() == 0) {
-            tarea.setId(siguienteId);
-            siguienteId = siguienteId + 1;
-            tareas.add(tarea);
-        }
-        return tarea;
-    }
+    boolean deleteById(int id);
 
-    public boolean deleteById(int id) {
-        return tareas.removeIf(tarea -> tarea.getId() == id);
-    }
-
-    public boolean existsById(int id) {
-        return findById(id).isPresent();
-    }
+    boolean existsById(int id);
 }
