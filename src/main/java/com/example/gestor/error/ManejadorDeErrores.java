@@ -35,6 +35,13 @@ public class ManejadorDeErrores {
         return construir(HttpStatus.CONFLICT, ex.getMessage(), peticion, List.of());
     }
 
+    @ExceptionHandler(ReglaDeNegocioException.class)
+    public ProblemDetail reglaIncumplida(
+            ReglaDeNegocioException ex, HttpServletRequest peticion) {
+
+        return construir(HttpStatus.CONFLICT, ex.getMessage(), peticion, List.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validacion(
             MethodArgumentNotValidException ex, HttpServletRequest peticion) {
